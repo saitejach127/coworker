@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ModelConfig } from "./model-config";
 import { McpConfig } from "./mcp-config";
 import { GeneralConfig } from "./general-config";
+import { SkillsConfig } from "./skills-config";
 
 interface ConfigPanelProps {
   open: boolean;
@@ -37,9 +38,7 @@ export function ConfigPanel({ open, onOpenChange }: ConfigPanelProps) {
             <McpConfig />
           </TabsContent>
           <TabsContent value="skills" className="mt-4">
-            <div className="text-sm text-muted-foreground">
-              Skills configuration coming in Phase 3.
-            </div>
+            <SkillsConfig />
           </TabsContent>
           <TabsContent value="general" className="mt-4">
             <GeneralConfig />
