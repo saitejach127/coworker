@@ -6,6 +6,7 @@ import { db, schema } from "@/lib/db";
 import { ensureDb } from "@/lib/db/init";
 import { getActiveConfig, getDecryptedApiKey } from "@/lib/config/config-service";
 import { getAllConnectedTools } from "@/lib/mcp/mcp-client-manager";
+import { getEnabledSkillsPrompt, getEnabledSkillTools } from "@/lib/skills/skills-service";
 import { agentMessageToStored, storedToAgentMessage } from "./message-converter";
 import type { SSEWriter } from "@/lib/sse";
 import { eq, asc } from "drizzle-orm";
@@ -124,12 +125,16 @@ function createAgent(sessionId: string): Agent {
     model = getModel("anthropic" as never, "claude-sonnet-4-20250514" as never);
   }
 
+  const skillsPrompt = getEnabledSkillsPrompt();
+  const skillTools = getEnabledSkillTools();
+  const allTools = [...getAllConnectedTools(), ...skillTools];
+
   const agent = new Agent({
     initialState: {
-      systemPrompt: config.systemPrompt,
+      systemPrompt: config.systemPrompt + skillsPrompt,
       model,
       thinkingLevel: config.thinkingLevel as ThinkingLevel,
-      tools: getAllConnectedTools(),
+      tools: allTools,
       messages,
     },
     getApiKey: async (provider: string) => {
@@ -226,15 +231,30 @@ export function refreshAgentConfig(sessionId: string): void {
     // keep current model
   }
   agent.state.thinkingLevel = config.thinkingLevel as ThinkingLevel;
-  agent.state.systemPrompt = config.systemPrompt;
+  const skillsPrompt = getEnabledSkillsPrompt();
+  agent.state.systemPrompt = config.systemPrompt + skillsPrompt;
   agent.toolExecution = config.toolExecutionMode as "parallel" | "sequential";
-  agent.state.tools = getAllConnectedTools();
+  const skillTools = getEnabledSkillTools();
+  agent.state.tools = [...getAllConnectedTools(), ...skillTools];
 }
 
 export function refreshAllAgentTools(): void {
-  const tools = getAllConnectedTools();
+  const mcpTools = getAllConnectedTools();
+  const skillTools = getEnabledSkillTools();
+  const tools = [...mcpTools, ...skillTools];
   for (const [, managed] of agents) {
     managed.agent.state.tools = tools;
+  }
+}
+
+export function refreshAllAgentSkills(): void {
+  const skillsPrompt = getEnabledSkillsPrompt();
+  const skillTools = getEnabledSkillTools();
+  const mcpTools = getAllConnectedTools();
+  const config = getActiveConfig();
+  for (const [, managed] of agents) {
+    managed.agent.state.systemPrompt = config.systemPrompt + skillsPrompt;
+    managed.agent.state.tools = [...mcpTools, ...skillTools];
   }
 }
 
