@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ModelConfig } from "./model-config";
+import { McpConfig } from "./mcp-config";
 import { GeneralConfig } from "./general-config";
 
 interface ConfigPanelProps {
@@ -33,9 +34,7 @@ export function ConfigPanel({ open, onOpenChange }: ConfigPanelProps) {
             <ModelConfig />
           </TabsContent>
           <TabsContent value="mcp" className="mt-4">
-            <div className="text-sm text-muted-foreground">
-              MCP server configuration coming in Phase 2.
-            </div>
+            <McpConfig />
           </TabsContent>
           <TabsContent value="skills" className="mt-4">
             <div className="text-sm text-muted-foreground">

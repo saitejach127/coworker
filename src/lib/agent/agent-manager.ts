@@ -5,6 +5,7 @@ import type { ImageContent, ThinkingLevel } from "@earendil-works/pi-ai";
 import { db, schema } from "@/lib/db";
 import { ensureDb } from "@/lib/db/init";
 import { getActiveConfig, getDecryptedApiKey } from "@/lib/config/config-service";
+import { getAllConnectedTools } from "@/lib/mcp/mcp-client-manager";
 import { agentMessageToStored, storedToAgentMessage } from "./message-converter";
 import type { SSEWriter } from "@/lib/sse";
 import { eq, asc } from "drizzle-orm";
@@ -128,7 +129,7 @@ function createAgent(sessionId: string): Agent {
       systemPrompt: config.systemPrompt,
       model,
       thinkingLevel: config.thinkingLevel as ThinkingLevel,
-      tools: [],
+      tools: getAllConnectedTools(),
       messages,
     },
     getApiKey: async (provider: string) => {
@@ -227,6 +228,14 @@ export function refreshAgentConfig(sessionId: string): void {
   agent.state.thinkingLevel = config.thinkingLevel as ThinkingLevel;
   agent.state.systemPrompt = config.systemPrompt;
   agent.toolExecution = config.toolExecutionMode as "parallel" | "sequential";
+  agent.state.tools = getAllConnectedTools();
+}
+
+export function refreshAllAgentTools(): void {
+  const tools = getAllConnectedTools();
+  for (const [, managed] of agents) {
+    managed.agent.state.tools = tools;
+  }
 }
 
 // Clean up idle agents periodically
